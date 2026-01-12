@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI 面试陪练（JD→题库→语音陪练）</title>
+  <style>
+    :root{
+      --bg: #f6f8ff;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: rgba(15,23,42,.10);
+
+      --p1: #5b7cfa;   /* 蓝紫主色 */
+      --p2: #7c5cff;   /* 紫 */
+      --p3: #22c55e;   /* 成功 */
+      --p4: #f59e0b;   /* 警告 */
+      --danger: #ef4444;
+
+      --r12: 12px;
+      --r16: 16px;
+      --r20: 20px;
+
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --shadow2: 0 8px 20px rgba(15,23,42,.06);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC","Microsoft YaHei", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.20), transparent 55%),
+                  radial-gradient(1000px 500px at 90% -10%, rgba(91,124,250,.18), transparent 60%),
+                  var(--bg);
+    }
+
+    .wrap{max-width:1100px;margin:0 auto;padding:20px 18px 28px}
+    header{
+      border-radius: 22px;
+      padding: 18px 18px;
+      background: linear-gradient(135deg, rgba(91,124,250,.95), rgba(124,92,255,.92));
+      color:#fff;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow:hidden;
+    }
+    header:before{
+      content:"";
+      position:absolute; inset:-60px -60px auto auto;
+      width: 240px; height: 240px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(255,255,255,0) 60%);
+      transform: rotate(12deg);
+    }
+    .h-title{font-size:20px;font-weight:800;letter-spacing:.2px;margin:0 0 6px}
+    .h-sub{margin:0;color:rgba(255,255,255,.85);font-size:13px;line-height:1.6;max-width:820px}
+
+    .grid{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr;}
+    }
+
+    .card{
+      background:var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--r20);
+      box-shadow: var(--shadow2);
+      padding:14px;
+    }
+    .card h3{
+      margin:0 0 10px;
+      font-size:14px;
+      display:flex;align-items:center;gap:8px;
+    }
+    .badge{
+      font-size:12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(91,124,250,.10);
+      color: #2747d6;
+      border: 1px solid rgba(91,124,250,.18);
+    }
+
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row > *{flex: 1 1 auto}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+    label{font-size:12px;color:var(--muted)}
+    textarea, input, select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(15,23,42,.12);
+      outline:none;
+      background:#fff;
+      color:var(--text);
+      transition: .15s ease;
+    }
+    textarea:focus, input:focus, select:focus{
+      border-color: rgba(124,92,255,.45);
+      box-shadow: 0 0 0 4px rgba(124,92,255,.12);
+    }
+    textarea{min-height:140px;resize:vertical;line-height:1.5}
+
+    .btn{
+      cursor:pointer;
+      border:1px solid rgba(15,23,42,.12);
+      background:#fff;
+      color:var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-weight:700;
+      transition:.15s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 10px 20px rgba(15,23,42,.06)}
+    .btn:active{transform: translateY(0)}
+    .btn-primary{
+      border:none;
+      color:#fff;
+      background: linear-gradient(135deg, var(--p1), var(--p2));
+    }
+    .btn-ghost{
+      background: rgba(91,124,250,.06);
+      border: 1px solid rgba(91,124,250,.18);
+      color:#2747d6;
+    }
+    .btn-danger{
+      border:none;color:#fff;
+      background: linear-gradient(135deg, #fb7185, #ef4444);
+    }
+    .btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+      margin-top:6px;
+    }
+
+    .pill{
+      display:inline-flex;align-items:center;gap:6px;
+      padding: 6px 10px;border-radius:999px;
+      border:1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.7);
+      font-size:12px;color:var(--muted);
+    }
+    .pill strong{color:var(--text)}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+
+    /* chat */
+    .chat{
+      display:flex; flex-direction:column; gap:10px;
+      max-height: 520px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .msg{
+      border: 1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding:10px 12px;
+      background:#fff;
+    }
+    .msg.me{border-color: rgba(124,92,255,.25); background: rgba(124,92,255,.06)}
+    .msg .meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+    .who{font-weight:800;font-size:12px}
+    .when{font-size:11px;color:var(--muted)}
+    .msg .txt{font-size:13px;line-height:1.6;white-space:pre-wrap}
+
+    .coach{
+      margin-top:8px;
+      border-radius: 16px;
+      border: 1px dashed rgba(91,124,250,.35);
+      background: rgba(91,124,250,.06);
+      padding:10px 12px;
+    }
+    .scoreline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 0}
+    .k{font-size:12px;color:var(--muted)}
+    .v{font-size:12px;font-weight:800;color:var(--text)}
+    .bar{
+      height:8px; width:100%;
+      background: rgba(15,23,42,.08);
+      border-radius:999px;
+      overflow:hidden;
+      margin-top:6px;
+    }
+    .bar > i{
+      display:block;height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(91,124,250,.95), rgba(124,92,255,.95));
+      border-radius:999px;
+    }
+
+    .footer-note{
+      margin-top:12px;
+      font-size:12px;color:var(--muted);line-height:1.5;
+    }
+
+    .toast{
+      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+      background:#0b1220; color:#fff;
+      padding:10px 12px; border-radius: 14px;
+      box-shadow: var(--shadow);
+      font-size:12px; opacity:0; pointer-events:none;
+      transition:.2s ease;
+      max-width: 92vw;
+    }
+    .toast.show{opacity:1; pointer-events:auto}
+    .small{font-size:12px;color:var(--muted)}
+    .right-tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <p class="h-title">AI 面试陪练：JD → 题库 → 语音陪练</p>
+      <p class="h-sub">
+        先上传/粘贴岗位 JD 自动生成面试题库，再进入陪练。支持「友好/压力」两种风格与「STAR/场景推进/量化表达」三类训练目标，训练中可切换（下一题生效）。
+      </p>
+      <div class="row" style="margin-top:10px">
+        <span class="pill"><strong>隐私提示</strong>：尽量先做脱敏（公司名/项目名）</span>
+        <span class="pill"><strong>语音</strong>：使用浏览器语音识别/播报（不兼容可手动输入）</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left: JD + Bank -->
+      <div class="card">
+        <h3>① 上传/粘贴 JD <span class="badge">生成题库</span></h3>
+
+        <div class="field">
+          <label>JD 文本（建议先脱敏）</label>
+          <textarea id="jdText" placeholder="把岗位 JD 直接粘贴到这里..."></textarea>
+          <div class="row">
+            <label class="btn btn-ghost" style="flex:0 0 auto;">
+              <input id="jdFile" type="file" accept=".txt" style="display:none;">
+              📎 导入 .txt
+            </label>
+            <button id="btnParse" class="btn">🧩 解析 JD</button>
+            <button id="btnGenBank" class="btn btn-primary">✨ 生成题库</button>
+          </div>
+          <div class="hint">推荐流程：解析 JD → 生成题库。题库生成后会缓存在本地（刷新也不会丢）。</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <div class="field">
+            <label>陪练风格（可训练中切换，下一题生效）</label>
+            <select id="styleSel">
+              <option value="friendly">友好引导</option>
+              <option value="pressure">压力面试</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>训练目标（可训练中切换，下一题生效）</label>
+            <select id="goalSel">
+              <option value="star">STAR 结构表达</option>
+              <option value="scenario">场景推进与决策</option>
+              <option value="quant">数据量化与结果表达</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>难度（MVP 先用 2）</label>
+            <select id="diffSel">
+              <option value="1">1（更友好）</option>
+              <option value="2" selected>2（标准）</option>
+              <option value="3">3（更刁钻）</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <div class="row" style="align-items:center">
+            <label class="pill" style="cursor:pointer">
+              <input id="ttsToggle" type="checkbox" style="margin:0 6px 0 0;">
+              <span>AI 语音播报</span>
+            </label>
+            <label class="pill" style="cursor:pointer">
+              <input id="editToggle" type="checkbox" checked style="margin:0 6px 0 0;">
+              <span>识别文本可编辑</span>
+            </label>
+          </div>
+          <div class="right-tools">
+            <button id="btnClear" class="btn btn-danger">🧹 清空本地缓存</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 style="margin-top:0">② 题库与进度 <span class="badge">本地缓存</span></h3>
+        <div class="row" style="align-items:center">
+          <button id="btnStart" class="btn btn-primary">▶ 开始陪练</button>
+          <button id="btnNext" class="btn" disabled>➡ 下一题</button>
+          <span class="pill"><strong>当前题</strong> <span id="qIndex">-</span> / <span id="qTotal">-</span></span>
+          <span class="pill"><strong>题型</strong> <span id="qType">-</span></span>
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <label>当前题目</label>
+          <textarea id="qPrompt" readonly placeholder="题库生成后，点击“开始陪练”自动出题"></textarea>
+          <div class="hint">提示：切换风格/目标会在“下一题”生效，本题不变。</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label>题库概览（只展示前 12 条）</label>
+          <div id="bankPreview" class="small">暂无题库</div>
+        </div>
+      </div>
+
+      <!-- Right: Chat -->
+      <div class="card">
+        <h3>③ 语音陪练 <span class="badge">面试官 + 教练</span></h3>
+
+        <div class="row">
+          <button id="btnMic" class="btn">🎙 开始语音</button>
+          <button id="btnStopMic" class="btn" disabled>⏹ 停止</button>
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <label>你的回答（语音识别/手动输入）</label>
+          <textarea id="answerText" placeholder="点击“开始语音”或直接输入..."></textarea>
+          <div class="row">
+            <button id="btnSend" class="btn btn-primary">📨 发送回答</button>
+            <button id="btnResetChat" class="btn">♻ 重置对话</button>
+          </div>
+          <div id="sttHint" class="hint">语音识别：未开始</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="chat" id="chat"></div>
+
+        <div class="footer-note">
+          说明：本 Demo 使用 Vercel Serverless Function 代理调用 DeepSeek，API Key 存在 Vercel 环境变量中，不会暴露在前端。:contentReference[oaicite:2]{index=2}
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+<script>
+  // -----------------------------
+  // Helpers
+  // -----------------------------
+  const $ = (id) => document.getElementById(id);
+  const toastEl = $("toast");
+  const nowStr = () => new Date().toLocaleString();
+
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(() => toastEl.classList.remove("show"), 2200);
+  }
+
+  function safeJsonParseMaybe(str){
+    try { return JSON.parse(str); } catch(e){}
+    // try extract first {...} block
+    const a = str.indexOf("{");
+    const b = str.lastIndexOf("}");
+    if(a>=0 && b>a){
+      try { return JSON.parse(str.slice(a, b+1)); } catch(e){}
+    }
+    return null;
+  }
+
+  function speakIfEnabled(text){
+    if(!$("ttsToggle").checked) return;
+    if(!("speechSynthesis" in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "zh-CN";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+
+  // -----------------------------
+  // State (local cache)
+  // -----------------------------
+  const LS_KEY = "ai_mock_interview_bank_v1";
+  const LS_CHAT = "ai_mock_interview_chat_v1";
+
+  let jdProfile = null;
+  let questionBank = null;
+  let currentQuestion = null;
+  let qCursor = 0;
+
+  let chatLog = []; // for UI only
+  let historySummary = ""; // MVP 先空，后续可做摘要压缩
+
+  const WEIGHTS = {
+    star:      { behavior_star: 0.65, scenario_case: 0.25, skill_check: 0.10 },
+    scenario:  { behavior_star: 0.25, scenario_case: 0.65, skill_check: 0.10 },
+    quant:     { behavior_star: 0.30, scenario_case: 0.30, skill_check: 0.40 }
+  };
+
+  const SCORE_WEIGHTS = {
+    star:     { clarity:0.15, structure:0.35, evidence:0.20, fit:0.15, impact:0.15 },
+    scenario: { clarity:0.15, structure:0.20, evidence:0.20, fit:0.25, impact:0.20 },
+    quant:    { clarity:0.15, structure:0.15, evidence:0.35, fit:0.15, impact:0.20 }
+  };
+
+  function sessionConfig(){
+    return {
+      style: $("styleSel").value,
+      goal: $("goalSel").value,
+      difficulty: Number($("diffSel").value),
+      feedback_mode: "micro",
+      language: "zh",
+      apply_timing: "next_turn"
+    };
+  }
+
+  function saveBank(){
+    localStorage.setItem(LS_KEY, JSON.stringify({ jdProfile, questionBank }));
+  }
+  function loadBank(){
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return;
+    const obj = safeJsonParseMaybe(raw);
+    if(obj && obj.questionBank){
+      jdProfile = obj.jdProfile || null;
+      questionBank = obj.questionBank;
+    }
+  }
+  function saveChat(){
+    localStorage.setItem(LS_CHAT, JSON.stringify({ chatLog }));
+  }
+  function loadChat(){
+    const raw = localStorage.getItem(LS_CHAT);
+    if(!raw) return;
+    const obj = safeJsonParseMaybe(raw);
+    if(obj && Array.isArray(obj.chatLog)) chatLog = obj.chatLog;
+  }
+
+  function renderBankPreview(){
+    if(!questionBank || !Array.isArray(questionBank.questions)){
+      $("bankPreview").textContent = "暂无题库";
+      $("qTotal").textContent = "-";
+      return;
+    }
+    $("qTotal").textContent = questionBank.questions.length;
+    const list = questionBank.questions.slice(0,12).map((q,i)=>{
+      return `${i+1}. [${q.type}] ${q.prompt}`;
+    }).join("\n");
+    $("bankPreview").textContent = list;
+  }
+
+  function renderChat(){
+    const box = $("chat");
+    box.innerHTML = "";
+    chatLog.forEach(m=>{
+      const div = document.createElement("div");
+      div.className = "msg " + (m.role === "me" ? "me" : "");
+      div.innerHTML = `
+        <div class="meta">
+          <div class="who">${m.role === "me" ? "你" : (m.role === "interviewer" ? "面试官" : "系统")}</div>
+          <div class="when">${m.when || ""}</div>
+        </div>
+        <div class="txt"></div>
+      `;
+      div.querySelector(".txt").textContent = m.text || "";
+
+      if(m.coach){
+        const c = m.coach;
+        const coach = document.createElement("div");
+        coach.className = "coach";
+        coach.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <div style="font-weight:900;font-size:12px">教练点评</div>
+            <span class="pill"><strong>总分</strong> ${c.total_score ?? "-"} / 100</span>
+          </div>
+          <div class="bar"><i style="width:${Math.max(0, Math.min(100, c.total_score||0))}%"></i></div>
+          <div class="scoreline">
+            <span class="k">亮点：</span><span class="v">${c.strength || "-"}</span>
+          </div>
+          <div class="scoreline">
+            <span class="k">改进：</span><span class="v">${c.improve || "-"}</span>
+          </div>
+          <div class="scoreline">
+            <span class="k">示范：</span><span class="v">${c.one_sentence_demo || "-"}</span>
+          </div>
+        `;
+        div.appendChild(coach);
+      }
+
+      box.appendChild(div);
+    });
+
+    box.scrollTop = box.scrollHeight;
+    saveChat();
+  }
+
+  // -----------------------------
+  // Question selection
+  // -----------------------------
+  function chooseNextQuestion(){
+    if(!questionBank || !questionBank.questions?.length) return null;
+    const goal = $("goalSel").value;
+    const weights = WEIGHTS[goal] || WEIGHTS.star;
+
+    // filter by difficulty (±1)
+    const diff = Number($("diffSel").value);
+    const pool = questionBank.questions.filter(q=>{
+      const d = Number(q.difficulty || 2);
+      return Math.abs(d - diff) <= 1 && q.type !== "closing_reverse";
+    });
+
+    // group by type
+    const groups = {
+      behavior_star: pool.filter(q=>q.type==="behavior_star"),
+      scenario_case: pool.filter(q=>q.type==="scenario_case"),
+      skill_check: pool.filter(q=>q.type==="skill_check"),
+    };
+
+    function pickByWeight(){
+      const r = Math.random();
+      const keys = Object.keys(weights);
+      let acc = 0;
+      for(const k of keys){
+        acc += weights[k];
+        if(r <= acc) return k;
+      }
+      return keys[0];
+    }
+
+    for(let tries=0; tries<6; tries++){
+      const t = pickByWeight();
+      const arr = groups[t] || [];
+      if(arr.length){
+        const q = arr[Math.floor(Math.random()*arr.length)];
+        return q;
+      }
+    }
+    // fallback
+    return pool[Math.floor(Math.random()*pool.length)] || questionBank.questions[0];
+  }
+
+  function applyQuestion(q){
+    currentQuestion = q;
+    $("qPrompt").value = q?.prompt || "";
+    $("qType").textContent = q?.type || "-";
+    $("qIndex").textContent = String(++qCursor);
+    $("btnNext").disabled = false;
+  }
+
+  // -----------------------------
+  // API calls
+  // -----------------------------
+  async function apiCall(action, payload){
+    const res = await fetch("/api/deepseek", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, payload })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.ok){
+      throw new Error(data.error || "请求失败");
+    }
+    return data.data;
+  }
+
+  // -----------------------------
+  // JD file import
+  // -----------------------------
+  $("jdFile").addEventListener("change", async (e)=>{
+    const f = e.target.files?.[0];
+    if(!f) return;
+    const text = await f.text();
+    $("jdText").value = text;
+    toast("已导入 JD 文本");
+  });
+
+  // -----------------------------
+  // Buttons: parse JD / generate bank
+  // -----------------------------
+  $("btnParse").addEventListener("click", async ()=>{
+    const jd = $("jdText").value.trim();
+    if(!jd){ toast("请先粘贴 JD"); return; }
+    $("btnParse").disabled = true;
+    try{
+      toast("正在解析 JD...");
+      const data = await apiCall("parse_jd", { jd_text: jd });
+      jdProfile = data;
+      saveBank();
+      toast("JD 解析完成");
+    }catch(err){
+      console.error(err);
+      toast("解析失败：" + err.message);
+    }finally{
+      $("btnParse").disabled = false;
+    }
+  });
+
+  $("btnGenBank").addEventListener("click", async ()=>{
+    const jd = $("jdText").value.trim();
+    if(!jd){ toast("请先粘贴 JD"); return; }
+    $("btnGenBank").disabled = true;
+    try{
+      toast("正在生成题库...");
+      const data = await apiCall("generate_bank", {
+        jd_text: jd,
+        jd_profile: jdProfile || null
+      });
+      questionBank = data;
+      qCursor = 0;
+      saveBank();
+      renderBankPreview();
+      toast("题库生成完成（已缓存）");
+    }catch(err){
+      console.error(err);
+      toast("生成失败：" + err.message);
+    }finally{
+      $("btnGenBank").disabled = false;
+    }
+  });
+
+  // -----------------------------
+  // Practice controls
+  // -----------------------------
+  $("btnStart").addEventListener("click", ()=>{
+    if(!questionBank?.questions?.length){
+      toast("请先生成题库");
+      return;
+    }
+    qCursor = 0;
+    const q = chooseNextQuestion();
+    applyQuestion(q);
+    chatLog.push({ role:"system", when: nowStr(), text:"陪练开始。请先回答当前题目。你可以用语音或文字输入。" });
+    chatLog.push({ role:"interviewer", when: nowStr(), text: q.prompt });
+    renderChat();
+    speakIfEnabled(q.prompt);
+    toast("已出题");
+  });
+
+  $("btnNext").addEventListener("click", ()=>{
+    if(!questionBank?.questions?.length){ toast("暂无题库"); return; }
+    const q = chooseNextQuestion();
+    applyQuestion(q);
+    chatLog.push({ role:"interviewer", when: nowStr(), text: "下一题：" + q.prompt });
+    renderChat();
+    speakIfEnabled(q.prompt);
+  });
+
+  $("btnResetChat").addEventListener("click", ()=>{
+    chatLog = [];
+    renderChat();
+    toast("对话已重置");
+  });
+
+  $("btnClear").addEventListener("click", ()=>{
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_CHAT);
+    jdProfile = null;
+    questionBank = null;
+    currentQuestion = null;
+    qCursor = 0;
+    $("qPrompt").value = "";
+    $("qType").textContent = "-";
+    $("qIndex").textContent = "-";
+    $("qTotal").textContent = "-";
+    $("bankPreview").textContent = "暂无题库";
+    chatLog = [];
+    renderChat();
+    toast("本地缓存已清空");
+  });
+
+  // -----------------------------
+  // Send answer
+  // -----------------------------
+  $("btnSend").addEventListener("click", async ()=>{
+    if(!currentQuestion){ toast("请先开始陪练出题"); return; }
+    const answer = $("answerText").value.trim();
+    if(!answer){ toast("请先输入回答"); return; }
+
+    const cfg = sessionConfig();
+    chatLog.push({ role:"me", when: nowStr(), text: answer });
+    renderChat();
+
+    $("btnSend").disabled = true;
+    try{
+      toast("AI 正在追问与点评...");
+      const data = await apiCall("chat", {
+        session_config: cfg,
+        question: currentQuestion,
+        user_answer: answer,
+        history_summary: historySummary,
+        rubric_weights: SCORE_WEIGHTS[cfg.goal] || SCORE_WEIGHTS.star
+      });
+
+      // data expected: { interviewer_reply, coach_feedback, next_focus, next_action }
+      const interviewer = data?.interviewer_reply || "（未生成面试官回复）";
+      const coach = data?.coach_feedback || null;
+
+      chatLog.push({
+        role:"interviewer",
+        when: nowStr(),
+        text: interviewer,
+        coach
+      });
+      renderChat();
+      speakIfEnabled(interviewer);
+
+      // 清空输入框（保留可编辑开关：MVP 先直接清空）
+      $("answerText").value = "";
+    }catch(err){
+      console.error(err);
+      toast("请求失败：" + err.message);
+    }finally{
+      $("btnSend").disabled = false;
+    }
+  });
+
+  // -----------------------------
+  // Speech Recognition (Web Speech API)
+  // -----------------------------
+  let recognition = null;
+  let recognizing = false;
+
+  function setupSTT(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){
+      $("sttHint").textContent = "语音识别：当前浏览器不支持（请手动输入）";
+      $("btnMic").disabled = true;
+      return;
+    }
+    recognition = new SR();
+    recognition.lang = "zh-CN";
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.onstart = ()=>{
+      recognizing = true;
+      $("sttHint").textContent = "语音识别：进行中…";
+      $("btnMic").disabled = true;
+      $("btnStopMic").disabled = false;
+    };
+
+    recognition.onerror = (e)=>{
+      $("sttHint").textContent = "语音识别：错误 " + (e.error || "");
+      recognizing = false;
+      $("btnMic").disabled = false;
+      $("btnStopMic").disabled = true;
+    };
+
+    recognition.onend = ()=>{
+      recognizing = false;
+      $("sttHint").textContent = "语音识别：已停止";
+      $("btnMic").disabled = false;
+      $("btnStopMic").disabled = true;
+    };
+
+    recognition.onresult = (e)=>{
+      let finalText = "";
+      let interim = "";
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t = e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalText += t;
+        else interim += t;
+      }
+      const allowEdit = $("editToggle").checked;
+      if(allowEdit){
+        // 可编辑：把结果追加到文本框
+        $("answerText").value = ($("answerText").value + " " + finalText + interim).trim();
+      }else{
+        // 不可编辑：直接覆盖（更像实时听写）
+        $("answerText").value = (finalText + interim).trim();
+      }
+    };
+  }
+
+  $("btnMic").addEventListener("click", ()=>{
+    if(!recognition) return;
+    try{ recognition.start(); }catch(e){}
+  });
+  $("btnStopMic").addEventListener("click", ()=>{
+    if(!recognition) return;
+    try{ recognition.stop(); }catch(e){}
+  });
+
+  // -----------------------------
+  // init
+  // -----------------------------
+  (function init(){
+    loadBank();
+    loadChat();
+    renderBankPreview();
+    renderChat();
+    setupSTT();
+
+    if(questionBank?.questions?.length){
+      $("qTotal").textContent = questionBank.questions.length;
+    }
+  })();
+</script>
+</body>
+</html>
