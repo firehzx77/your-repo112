@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI 面试陪练（语音条对话版）</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div>
+          <div class="title">AI 面试陪练</div>
+          <div class="sub">语音条对话 · 场景舞台 · 面试官音色可选</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="btnReset" class="btn ghost">重置会话</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- 左侧：配置 -->
+      <section class="panel card">
+        <h2>① 配置</h2>
+
+        <div class="form">
+          <label>
+            <span>岗位（候选人）</span>
+            <select id="jobSelect">
+              <option value="产品经理">产品经理</option>
+              <option value="销售">销售</option>
+              <option value="运营">运营</option>
+              <option value="数据分析">数据分析</option>
+              <option value="项目经理">项目经理</option>
+              <option value="HRBP">HRBP</option>
+              <option value="软件工程师">软件工程师</option>
+              <option value="客服">客服</option>
+            </select>
+          </label>
+
+          <label>
+            <span>面试官类型（角色设定）</span>
+            <select id="interviewerType">
+              <option value="专业严谨的业务面试官">专业严谨的业务面试官</option>
+              <option value="压力面试官（强追问）">压力面试官（强追问）</option>
+              <option value="友好引导型面试官">友好引导型面试官</option>
+              <option value="结构化面试官（STAR驱动）">结构化面试官（STAR驱动）</option>
+              <option value="数据导向面试官（量化追问）">数据导向面试官（量化追问）</option>
+            </select>
+          </label>
+
+          <label>
+            <span>陪练风格</span>
+            <select id="styleSelect">
+              <option value="friendly">友好引导</option>
+              <option value="pressure">压力面试</option>
+            </select>
+          </label>
+
+          <label>
+            <span>训练目标</span>
+            <select id="goalSelect">
+              <option value="star">STAR 结构表达</option>
+              <option value="scenario">场景推进与决策</option>
+              <option value="quant">数据量化与结果表达</option>
+            </select>
+          </label>
+
+          <label>
+            <span>场地设定</span>
+            <select id="sceneSelect">
+              <option value="interview_room">面试室（正式）</option>
+              <option value="meeting_room">会议室（复盘）</option>
+              <option value="open_office">开放办公（快节奏）</option>
+              <option value="online_call">线上面试（视频通话）</option>
+            </select>
+          </label>
+
+          <div class="divider"></div>
+
+          <h3>② 面试官语音</h3>
+
+          <label>
+            <span>语音模式</span>
+            <select id="ttsMode">
+              <option value="on">开启（默认）</option>
+              <option value="off">关闭</option>
+            </select>
+          </label>
+
+          <label>
+            <span>快速选择（男/女：智能猜测）</span>
+            <select id="voicePreset">
+              <option value="auto">自动</option>
+              <option value="male">偏男声</option>
+              <option value="female">偏女声</option>
+            </select>
+          </label>
+
+          <label>
+            <span>具体音色（来自系统可用 voices）</span>
+            <select id="voiceSelect">
+              <option value="">加载中…</option>
+            </select>
+          </label>
+
+          <div class="row2">
+            <label>
+              <span>语速</span>
+              <input id="rate" type="range" min="0.7" max="1.3" step="0.05" value="1.0" />
+            </label>
+            <label>
+              <span>音高</span>
+              <input id="pitch" type="range" min="0.7" max="1.4" step="0.05" value="1.0" />
+            </label>
+          </div>
+
+          <div class="hint">
+            注：不同设备/浏览器可用音色不同；“男/女”只能做启发式匹配，不保证绝对准确。:contentReference[oaicite:4]{index=4}
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnStart" class="btn primary">▶ 开始陪练（生成 3-5 题）</button>
+          <button id="btnNext" class="btn">➡ 跳到下一题</button>
+        </div>
+
+        <div class="progress card soft">
+          <div class="kv">
+            <div class="k">当前题</div>
+            <div class="v" id="qIndex">- / -</div>
+          </div>
+          <div class="kv">
+            <div class="k">状态</div>
+            <div class="v" id="status">未开始</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 中间：舞台 -->
+      <section class="stage card">
+        <h2>③ 场景舞台</h2>
+
+        <div class="stageWrap" id="stageWrap">
+          <canvas id="fxCanvas" class="fx"></canvas>
+
+          <div class="sceneLabel" id="sceneLabel">面试室</div>
+
+          <div class="room">
+            <div class="lightBeam"></div>
+            <div class="floor"></div>
+
+            <div class="avatar left" id="avatarNpc">
+              <div class="tag">面试官</div>
+              <div class="head">
+                <div class="eye e1"></div><div class="eye e2"></div>
+                <div class="mouth" id="npcMouth"></div>
+              </div>
+              <div class="body"></div>
+              <div class="wave" id="npcWave"></div>
+            </div>
+
+            <div class="avatar right" id="avatarUser">
+              <div class="tag">你（候选人）</div>
+              <div class="head">
+                <div class="eye e1"></div><div class="eye e2"></div>
+                <div class="mouth" id="userMouth"></div>
+              </div>
+              <div class="body"></div>
+              <div class="wave" id="userWave"></div>
+            </div>
+
+            <div class="desk"></div>
+          </div>
+        </div>
+
+        <div class="currentQ card soft">
+          <div class="label">当前问题</div>
+          <div class="qText" id="currentQ">尚未开始</div>
+          <div class="qList" id="qList"></div>
+        </div>
+      </section>
+
+      <!-- 右侧：语音条聊天 -->
+      <section class="chat card">
+        <h2>④ 语音互动（语音条，不显示文字记录）</h2>
+
+        <div class="chatList" id="chatList"></div>
+
+        <div class="ptt card soft">
+          <div class="pttRow">
+            <button id="btnHold" class="btn hold">按住说话</button>
+            <button id="btnStop" class="btn ghost" disabled>⏹ 停止</button>
+            <button id="btnSend" class="btn primary" disabled>发送回答</button>
+          </div>
+
+          <div class="pttMeta">
+            <div class="metaItem">
+              <span class="dot" id="recDot"></span>
+              <span id="recState">未录音</span>
+            </div>
+            <div class="metaItem">
+              <span>语音识别：</span>
+              <span id="asrState">待机</span>
+            </div>
+          </div>
+
+          <details class="debug">
+            <summary>（可选）调试：显示本次识别文本</summary>
+            <pre id="debugTranscript"></pre>
+          </details>
+
+          <div class="hint">
+            说明：界面不显示文字对话，但 AI 需要“理解你的回答”才能追问/点评，所以会在后台做一次“隐形识别”。SpeechRecognition 在部分浏览器不可用。:contentReference[oaicite:5]{index=5}
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
